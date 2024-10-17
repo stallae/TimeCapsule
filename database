@@ -1,0 +1,77 @@
+### 1. **Tabela `users`**
+Essa tabela armazenará os dados dos usuários que utilizarão o serviço para enviar mensagens.
+
+| Coluna           | Tipo de Dados  | Descrição                                      |
+|------------------|----------------|------------------------------------------------|
+| `user_id`        | `UUID`         | Identificador único do usuário (primary key).  |
+| `name`           | `VARCHAR(255)` | Nome do usuário.                               |
+| `email`          | `VARCHAR(255)` | Email do usuário (único).                      |
+| `phone_number`   | `VARCHAR(20)`  | Número de telefone para SMS.                   |
+| `created_at`     | `TIMESTAMP`    | Data e hora de criação do registro.            |
+| `updated_at`     | `TIMESTAMP`    | Data e hora da última atualização do registro. |
+
+### 2. **Tabela `messages`**
+Essa tabela armazenará as informações das mensagens que serão enviadas, como o conteúdo (texto ou URL de arquivos), a data de envio e o status de pagamento.
+
+| Coluna           | Tipo de Dados  | Descrição                                           |
+|------------------|----------------|---------------------------------------------------|
+| `message_id`     | `UUID`         | Identificador único da mensagem (primary key).    |
+| `user_id`        | `UUID`         | Identificador do usuário que criou a mensagem.    |
+| `content_type`   | `VARCHAR(50)`  | Tipo de conteúdo (`text`, `image`, `video`).      |
+| `content_url`    | `TEXT`         | URL do arquivo no bucket (se for vídeo ou imagem).|
+| `text_content`   | `TEXT`         | Texto da mensagem (se for uma mensagem de texto). |
+| `send_date`      | `TIMESTAMP`    | Data e hora em que a mensagem será enviada.       | 
+| `recipient_email`| `VARCHAR(255)` | Email do destinatário da mensagem.                |
+| `trigger_on_death`| `BOOLEAN`     | Indica se o envio depende de prova de vida.       |
+| `paid`           | `BOOLEAN`      | Indica se a mensagem já foi paga.                 |
+| `created_at`     | `TIMESTAMP`    | Data e hora de criação da mensagem.               |
+| `updated_at`     | `TIMESTAMP`    | Data e hora da última atualização da mensagem.    |
+
+### 3. **Tabela `payments`**
+Essa tabela armazenará os dados relacionados aos pagamentos processados pela Stripe, vinculando as mensagens com o status de pagamento.
+
+| Coluna           | Tipo de Dados  | Descrição                                      |
+|------------------|----------------|------------------------------------------------|
+| `payment_id`     | `UUID`         | Identificador único do pagamento (primary key).|
+| `message_id`     | `UUID`         | Referência à mensagem associada ao pagamento.  |
+| `stripe_payment_id` | `VARCHAR(255)` | ID do pagamento gerado pela Stripe.         |
+| `amount`         | `DECIMAL(10,2)`| Valor do pagamento realizado.                  |
+| `currency`       | `VARCHAR(10)`  | Moeda do pagamento (ex: USD, EUR).             |
+| `payment_status` | `VARCHAR(50)`  | Status do pagamento (`pending`, `succeeded`, `failed`). |
+| `created_at`     | `TIMESTAMP`    | Data e hora de criação do pagamento.           |
+| `updated_at`     | `TIMESTAMP`    | Data e hora da última atualização do pagamento.|
+
+### 4. **Tabela `life_proofs`**
+Essa tabela armazenará informações sobre as provas de vida dos usuários, necessárias para o envio das mensagens condicionadas à falha na prova de vida.
+
+| Coluna           | Tipo de Dados  | Descrição                                      |
+|------------------|----------------|------------------------------------------------|
+| `life_proof_id`  | `UUID`         | Identificador único da prova de vida (primary key).|
+| `user_id`        | `UUID`         | Referência ao usuário associado à prova de vida.|
+| `token`          | `VARCHAR(255)` | Token gerado para confirmação da prova de vida.|
+| `method`         | `VARCHAR(50)`  | Método de envio (`sms` ou `email`).            |
+| `status`         | `VARCHAR(50)`  | Status da prova de vida (`pending`, `confirmed`, `failed`).|
+| `created_at`     | `TIMESTAMP`    | Data e hora em que a prova de vida foi gerada. |
+| `updated_at`     | `TIMESTAMP`    | Data e hora da última atualização do status.   |
+
+### 5. **Tabela `recipients`**
+Essa tabela será útil caso o usuário queira enviar a mensagem para vários destinatários, permitindo adicionar múltiplos emails de destinatários para cada mensagem.
+
+| Coluna           | Tipo de Dados  | Descrição                                      |
+|------------------|----------------|------------------------------------------------|
+| `recipient_id`   | `UUID`         | Identificador único do destinatário (primary key).|
+| `message_id`     | `UUID`         | Referência à mensagem que será enviada ao destinatário.|
+| `recipient_email`| `VARCHAR(255)` | Email do destinatário.                         |
+| `created_at`     | `TIMESTAMP`    | Data e hora de criação do registro.            |
+
+---
+
+### **Relacionamentos:**
+1. **`users` -> `messages`:** Relacionamento 1:N, onde um usuário pode criar várias mensagens.
+2. **`messages` -> `payments`:** Relacionamento 1:1, onde cada mensagem pode ter um pagamento associado.
+3. **`users` -> `life_proofs`:** Relacionamento 1:N, onde um usuário pode ter múltiplas provas de vida (envios recorrentes).
+4. **`messages` -> `recipients`:** Relacionamento 1:N, onde uma mensagem pode ser enviada para vários destinatários.
+
+---
+
+Essas tabelas cobrem as principais funcionalidades do seu sistema, como a criação de mensagens, o processamento de pagamentos e o mecanismo de prova de vida. Caso precise ajustar algo ou adicionar novas funcionalidades, podemos modificar essas definições. O que acha dessa estrutura?
